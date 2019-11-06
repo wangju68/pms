@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:cache="http://www.springframework.org/schema/cache"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+    <cache:annotation-driven/>
+
+    <bean id="jedisPoolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大空闲连接数 -->
+        <property name="maxIdle" value="1000" />
+        <!-- 最大连接数 -->
+        <property name="maxTotal" value="5000" />
+        <!-- 连接耗尽时是否阻塞, false报异常,ture阻塞直到超时, 默认true -->
+        <property name="blockWhenExhausted" value="true" />
+        <!-- 获取连接时的最大等待毫秒数(如果设置为阻塞时BlockWhenExhausted),如果超时就抛异常, 小于零:阻塞不确定的时间,  默认-1 -->
+        <property name="maxWaitMillis" value="3000" />
+        <!-- 在获取连接的时候检查有效性 -->
+        <property name="testOnBorrow" value="true" />
+    </bean>
+    <!-- redis单机 通过连接池 -->
+    <!--<bean class="redis.clients.jedis.JedisPool" destroy-method="close">
+        <constructor-arg name="poolConfig" ref="jedisPoolConfig" />
+        <constructor-arg name="host" value="192.168.154.10" />
+        <constructor-arg name="port" value="6379" />
+        <constructor-arg name="timeout" value="3000" />
+        <constructor-arg name="password" value="offcn"/>
+    </bean>-->
+
+    <!-- 开启注解的方式 -->
+    <!-- 配置JedisConnectionFactory -->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <property name="hostName" value="192.168.154.10"/>
+        <property name="port" value="6379"/>
+        <property name="password" value="offcn"/>
+        <property name="database" value="0"/>
+        <property name="poolConfig" ref="jedisPoolConfig"/>
+    </bean>
+
+    <!-- 配置RedisTemplate -->
+    <bean id="redisTemplate" class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory"/>
+        <property name="keySerializer">
+            <bean class="org.springframework.data.redis.serializer.StringRedisSerializer"/>
+        </property>
+        <property name="valueSerializer">
+            <bean class="org.springframework.data.redis.serializer.JdkSerializationRedisSerializer"/>
+        </property>
+    </bean>
+
+    <!-- 配置RedisCacheManager -->
+    <bean id="cacheManager" class="org.springframework.data.redis.cache.RedisCacheManager">
+        <constructor-arg index="0" ref="redisTemplate"/>
+        <property name="defaultExpiration" value="3000"/>
+    </bean>
+</beans>

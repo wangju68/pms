@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/cache http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+<!--1.job作业-->
+<bean id="logPrinter" class="com.ujiuye.jobs.LogPrinter"></bean>
+
+        <!-- 2.JobDetail对象-->
+<bean id="jobDetail" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+<property name="targetObject" ref="logPrinter" />
+<property name="targetMethod" value="printLog" />
+</bean>
+
+        <!--3.配置trigger触发器 -->
+<bean id="cronTrigger" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+<!-- see the example of method invoking job above -->
+<property name="jobDetail" ref="jobDetail" />
+<!-- 10 seconds -->
+<!--<property name="startDelay" value="10000" />-->
+<!-- repeat every 50 seconds -->
+<!--<property name="repeatInterval" value="5000" />-->
+    <property name="cronExpression" value="0 0 8 * * ?"/>
+</bean>
+
+        <!-- 4.配置scheduler容器 -->
+<bean class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+<property name="triggers">
+    <list>
+        <ref bean="cronTrigger" />
+    </list>
+</property>
+</bean>
+</beans>
